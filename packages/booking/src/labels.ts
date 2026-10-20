@@ -1,0 +1,30 @@
+import type { BookingState } from './machine';
+
+/** Short status copy shown to people. */
+export const STATE_LABELS: Record<BookingState, string> = {
+  invited: 'Invited',
+  applied: 'Applied',
+  parent_review: 'Waiting for parent',
+  parent_approved: 'Parent approved',
+  employer_accepted: 'Accepted',
+  confirmed: 'Confirmed',
+  payment_authorized: 'Ready to start',
+  checked_in: 'Checked in',
+  in_progress: 'In progress',
+  work_ended: 'Finished',
+  captured: 'Payment processing',
+  paid: 'Paid',
+  closed: 'Complete',
+  handed_off: 'Introduced',
+  junior_declined: 'Declined',
+  parent_declined: 'Not approved',
+  employer_declined: 'Not selected',
+  expired: 'Expired',
+  cancelled_by_junior: 'Cancelled',
+  cancelled_by_parent: 'Cancelled by parent',
+  cancelled_by_employer: 'Cancelled by employer',
+  no_show_junior: 'Missed',
+  no_show_employer: 'Employer no-show',
+  disputed: 'In dispute',
+  refunded: 'Refunded',
+};

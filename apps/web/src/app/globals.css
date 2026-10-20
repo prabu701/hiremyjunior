@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   HireMyJunior design tokens. Colours come from the Spark prototype's four themes,
+   extended with the surfaces, borders and states a full web app needs. Every
+   component reads these variables, so a theme switch is just an attribute on <html>.
+   ────────────────────────────────────────────────────────────────────────────── */
+
+:root,
+[data-theme="citrus"] {
+  --canvas: #fdf6ec;
+  --surface: #ffffff;
+  --surface-2: #fbf2e6;
+  --line: #f0e3d3;
+  --line-strong: #e4d2bd;
+  --ink: #241d18;
+  --muted: #8a7766;
+  --accent: #ff6b35;
+  --accent-strong: #e5531d;
+  --accent-soft: #ffe8dc;
+  --accent-ink: #b34700;
+  --on-accent: #ffffff;
+  --tint-1: #ffe1cc; --tint-1-ink: #b34700;
+  --tint-2: #e7e1ff; --tint-2-ink: #5b3fd9;
+  --tint-3: #d7f5e3; --tint-3-ink: #1d8a54;
+  --danger: #c62828; --danger-soft: #fde8e8;
+  --nav: #fffcf8;
+  --shadow-color: 178 96 16;
+  --hero-glow: #ffd2b8;
+  color-scheme: light;
+}
+
+[data-theme="electric"] {
+  --canvas: #f6f3ff; --surface: #ffffff; --surface-2: #efeaff; --line: #e6e0fb; --line-strong: #d6cdf6;
+  --ink: #1e1b2e; --muted: #736b91;
+  --accent: #7c5cfc; --accent-strong: #6743f0; --accent-soft: #ece6ff; --accent-ink: #5b3fd9; --on-accent: #ffffff;
+  --tint-1: #e9e4ff; --tint-1-ink: #5b3fd9; --tint-2: #fff3c4; --tint-2-ink: #8a6d00; --tint-3: #d8f5e9; --tint-3-ink: #1d8a6b;
+  --danger: #c62828; --danger-soft: #fde8e8; --nav: #fbfaff; --shadow-color: 91 63 217; --hero-glow: #d9ceff;
+  color-scheme: light;
+}
+
+[data-theme="sunset"] {
+  --canvas: #fff3f0; --surface: #ffffff; --surface-2: #ffece8; --line: #f8dedb; --line-strong: #f0cbc7;
+  --ink: #2b1815; --muted: #9a726d;
+  --accent: #ff4f81; --accent-strong: #ec3169; --accent-soft: #ffe2ea; --accent-ink: #c4225a; --on-accent: #ffffff;
+  --tint-1: #ffd9de; --tint-1-ink: #c4225a; --tint-2: #ffebb0; --tint-2-ink: #8a5f00; --tint-3: #ffe3c2; --tint-3-ink: #a54e08;
+  --danger: #b3261e; --danger-soft: #fde8e8; --nav: #fff8f6; --shadow-color: 196 34 90; --hero-glow: #ffc9d6;
+  color-scheme: light;
+}
+
+[data-theme="midnight"] {
+  --canvas: #131219; --surface: #1d1b26; --surface-2: #24222f; --line: #2c2938; --line-strong: #3a3648;
+  --ink: #f4f1ec; --muted: #9a96a8;
+  --accent: #ff6b35; --accent-strong: #ff834f; --accent-soft: #3a2a1e; --accent-ink: #ffb37a; --on-accent: #ffffff;
+  --tint-1: #3a2a1e; --tint-1-ink: #ffb37a; --tint-2: #2b2740; --tint-2-ink: #b8a6ff; --tint-3: #1e332b; --tint-3-ink: #6fe3a8;
+  --danger: #ff8a80; --danger-soft: #3a1f22; --nav: #17161f; --shadow-color: 0 0 0; --hero-glow: #4a2a1a;
+  color-scheme: dark;
+}
+
+/* Corner style (prototype "Appearance" setting). */
+:root, [data-corners="rounded"] { --r-card: 1.25rem; --r-control: 0.875rem; --r-pill: 999px; --r-tile: 0.875rem; }
+[data-corners="sharp"] { --r-card: 0; --r-control: 0; --r-pill: 0; --r-tile: 0; }
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-on-accent: var(--on-accent);
+  --color-tint-1: var(--tint-1);
+  --color-tint-1-ink: var(--tint-1-ink);
+  --color-tint-2: var(--tint-2);
+  --color-tint-2-ink: var(--tint-2-ink);
+  --color-tint-3: var(--tint-3);
+  --color-tint-3-ink: var(--tint-3-ink);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-nav: var(--nav);
+
+  --font-display: var(--font-fredoka), ui-rounded, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius-card: var(--r-card);
+  --radius-control: var(--r-control);
+  --radius-pill: var(--r-pill);
+  --radius-tile: var(--r-tile);
+
+  --shadow-soft: 0 1px 2px rgb(var(--shadow-color) / 0.06), 0 4px 14px rgb(var(--shadow-color) / 0.07);
+  --shadow-lift: 0 2px 4px rgb(var(--shadow-color) / 0.06), 0 14px 34px rgb(var(--shadow-color) / 0.12);
+  --shadow-float: 0 24px 60px -12px rgb(var(--shadow-color) / 0.25);
+
+  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.01em; }
+  ::selection { background: var(--accent-soft); color: var(--accent-ink); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  input, textarea, select, button { font: inherit; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

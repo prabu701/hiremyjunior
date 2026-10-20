@@ -1,0 +1,105 @@
+-- Shared pgTAP helpers. Include from a test with:  \ir _helpers.psql
+-- (The runner only executes *.sql files, so this one is never run on its own.)
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+
+-- Create a user the way GoTrue does; the on_auth_user_created trigger makes the profile.
+create function pg_temp.new_user(email text, role text) returns uuid language plpgsql as $$
+declare uid uuid := gen_random_uuid();
+begin
+  insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+  values (uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', email,
+          jsonb_build_object('role', role), now(), now());
+  return uid;
+end $$;
+
+-- Impersonate a signed-in user exactly as PostgREST does (role + JWT claims, transaction-local).
+create function pg_temp.act_as(uid uuid) returns void language plpgsql as $$
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
+end $$;
+
+create function pg_temp.act_as_anon() returns void language plpgsql as $$
+begin
+  perform set_config('role', 'anon', true);
+  perform set_config('request.jwt.claims', '{"role":"anon"}', true);
+end $$;
+
+-- Back to the test superuser (for setup that clients can't do, e.g. granting admin).
+create function pg_temp.act_as_system() returns void language plpgsql as $$
+begin
+  perform set_config('role', 'postgres', true);
+  perform set_config('request.jwt.claims', '', true);
+end $$;
+
+-- A date of birth that makes someone exactly `years` old today (plus a margin of days).
+create function pg_temp.dob_for_age(years int, extra_days int default 30) returns date language sql as $$
+  select (current_date - make_interval(years => years) - make_interval(days => extra_days))::date;
+$$;
+
+-- ── Fully verified accounts, for tests that are about what comes after onboarding ──
+-- Writes verification rows directly (provider 'test') the way the Edge Functions would.
+create function pg_temp.verify(uid uuid, kinds text[]) returns void language plpgsql as $$
+declare k text;
+begin
+  foreach k in array kinds loop
+    insert into public.verifications (subject_id, kind, provider, status, verified_at)
+    values (uid, k::public.verification_kind, 'test', 'verified', now());
+  end loop;
+  update public.profiles set phone = '+1425555' || lpad((floor(random() * 10000))::text, 4, '0') where id = uid;
+  update public.profiles set phone_verified_at = now() where id = uid;
+  perform public.refresh_profile_status(uid);
+end $$;
+
+create function pg_temp.active_parent(addr text, zip text default '98074') returns uuid language plpgsql as $$
+declare uid uuid := pg_temp.new_user(addr, 'parent');
+begin
+  insert into public.parents (profile_id, zip, city) values (uid, zip, 'Testville');
+  update public.profiles set full_name = initcap(split_part(addr, '@', 1)) || ' Parent', onboarded_at = now() where id = uid;
+  perform pg_temp.verify(uid, array['identity']);
+  return uid;
+end $$;
+
+create function pg_temp.active_junior(addr text, age int, zip text default '98074', parent uuid default null) returns uuid language plpgsql as $$
+declare
+  uid uuid := pg_temp.new_user(addr, 'junior');
+  p uuid := coalesce(parent, pg_temp.active_parent('parent-of-' || addr, zip));
+begin
+  insert into public.juniors (profile_id, dob_claimed, dob, dob_attested_by, dob_attested_at, school_name, zip, city)
+  values (uid, pg_temp.dob_for_age(age), pg_temp.dob_for_age(age), p, now(), 'Test High', zip, 'Testville');
+  update public.profiles set full_name = initcap(split_part(addr, '@', 1)) || ' Tester', onboarded_at = now() where id = uid;
+  insert into public.guardianships (parent_id, junior_id, status, activated_at) values (p, uid, 'active', now());
+  perform pg_temp.verify(uid, array['proof_of_age']);
+  return uid;
+end $$;
+
+create function pg_temp.active_employer(addr text, kind text default 'household', zip text default '98074') returns uuid language plpgsql as $$
+declare uid uuid := pg_temp.new_user(addr, 'employer');
+begin
+  insert into public.employers (profile_id, kind, display_name, zip, city, legal_name, ubi, supervisor_name, supervisor_email)
+  values (uid, kind::public.employer_kind, initcap(split_part(addr, '@', 1)) || ' ' || kind, zip, 'Testville',
+          case when kind = 'business' then 'Test LLC' end, case when kind = 'business' then '603000001' end,
+          case when kind = 'business' then 'Sam Sup' end, case when kind = 'business' then 'sam@test.local' end);
+  update public.profiles set full_name = initcap(split_part(addr, '@', 1)) || ' Employer', onboarded_at = now() where id = uid;
+  perform pg_temp.verify(uid, case when kind = 'business'
+    then array['identity', 'business_registration', 'work_permit', 'supervisor_check']
+    else array['identity', 'background_check'] end);
+  return uid;
+end $$;
+
+-- A shift payload `days` from now, 9–11am WA time.
+create function pg_temp.shift_in(days int, start_t text default '09:00', end_t text default '11:00') returns jsonb language sql as $$
+  select jsonb_build_array(jsonb_build_object('date', (current_date + days)::text, 'start', start_t, 'end', end_t));
+$$;
+
+-- Post a job as the given employer (switches identity; resets to system afterwards).
+create function pg_temp.post_job(employer uuid, category text, title text, rate int default 1800, zip text default '98074', days int default 5) returns uuid language plpgsql as $$
+declare jid uuid;
+begin
+  perform pg_temp.act_as(employer);
+  jid := public.save_job(null, category, title, title || ' — a longer description for the job.', rate, 'hourly', 1, null,
+                         zip, 'Testville', '1 Test Way', null, pg_temp.shift_in(days), true);
+  perform pg_temp.act_as_system();
+  return jid;
+end $$;

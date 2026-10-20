@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "HireMyJunior",
+    "slug": "hiremyjunior",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hiremyjunior.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#17171F",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.hiremyjunior.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "scheme": "hiremyjunior",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-status-bar",
+      "expo-splash-screen",
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "HireMyJunior uses your photos to upload a proof-of-age document and job photos.",
+          "cameraPermission": "HireMyJunior uses the camera to photograph your ID and job photos.",
+          "microphonePermission": false
+        }
+      ]
+    ]
+  }
+}

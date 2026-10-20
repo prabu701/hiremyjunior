@@ -1,0 +1,6 @@
+{
+  // Shared import map for every function (edge-runtime loads this for all workers).
+  "imports": {
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2"
+  }
+}

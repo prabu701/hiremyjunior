@@ -1,0 +1,23 @@
+{
+  "name": "@hmj/ui",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hmj/shared": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-svg": "*",
+    "react-native-safe-area-context": "*"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.0"
+  }
+}

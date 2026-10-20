@@ -1,0 +1,27 @@
+{
+  "name": "hiremyjunior",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "env:init": "node scripts/gen-env.mjs",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "stack:up": "docker compose up -d --build",
+    "stack:down": "docker compose down",
+    "stack:reset": "docker compose down -v",
+    "db:migrate": "docker compose run --rm migrate migrate",
+    "db:test": "docker compose run --rm migrate test",
+    "db:types": "bash scripts/gen-types.sh",
+    "code": "node scripts/last-code.mjs",
+    "lint": "turbo run lint",
+    "admin:create": "node scripts/create-admin.mjs",
+    "db:seed": "node scripts/seed.mjs",
+    "dev:web": "pnpm --filter @hmj/web dev",
+    "e2e": "pnpm --filter @hmj/web e2e",
+    "demo": "node scripts/open-demo.mjs"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "~6.0.3"
+  }
+}

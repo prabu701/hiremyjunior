@@ -1,0 +1,73 @@
+# Local API gateway (replaces Supabase's Envoy/Kong). ${ANON_KEY} and ${SERVICE_ROLE_KEY}
+# are substituted at container start; nginx's own $variables are left untouched.
+
+# API keys are ~200-char JWTs; the default bucket size (64) can't hash them.
+map_hash_bucket_size 256;
+
+map $http_apikey $apikey_valid {
+  default               0;
+  "${ANON_KEY}"         1;
+  "${SERVICE_ROLE_KEY}" 1;
+}
+
+server {
+  listen 8000;
+  client_max_body_size 50m;
+
+  # CORS for the Expo web app and dev server. The gateway is the single source of CORS headers:
+  # GoTrue and PostgREST add their own, and browsers reject a response carrying two
+  # Access-Control-Allow-Origin values.
+  proxy_hide_header Access-Control-Allow-Origin;
+  proxy_hide_header Access-Control-Allow-Credentials;
+  proxy_hide_header Access-Control-Allow-Methods;
+  proxy_hide_header Access-Control-Allow-Headers;
+  proxy_hide_header Access-Control-Expose-Headers;
+  set $cors_origin $http_origin;
+  add_header Access-Control-Allow-Origin $cors_origin always;
+  add_header Access-Control-Allow-Credentials true always;
+  add_header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
+  add_header Access-Control-Allow-Headers "authorization, apikey, content-type, x-client-info, x-supabase-api-version, accept-profile, content-profile, prefer, range, x-upsert, cache-control" always;
+  add_header Access-Control-Expose-Headers "content-range, content-length, x-supabase-api-version" always;
+
+  if ($request_method = OPTIONS) { return 204; }
+
+  location = /health { default_type text/plain; return 200 "ok\n"; }
+
+  # Fetched by GoTrue (internal network) to render OTP e-mails.
+  location /email-templates/ { alias /usr/share/nginx/email-templates/; }
+
+  # Browser-opened auth endpoints (e-mail links, OAuth callbacks) carry no apikey.
+  location ~ ^/auth/v1/(verify|callback|authorize|\.well-known/jwks\.json) {
+    proxy_pass http://auth:9999;
+    rewrite ^/auth/v1/(.*)$ /$1 break;
+  }
+
+  location /auth/v1/ {
+    if ($apikey_valid = 0) { return 401 '{"message":"Invalid API key"}'; }
+    proxy_pass http://auth:9999/;
+    proxy_set_header Host $host;
+  }
+
+  location /rest/v1/ {
+    if ($apikey_valid = 0) { return 401 '{"message":"Invalid API key"}'; }
+    proxy_pass http://rest:3000/;
+    proxy_set_header Host $host;
+  }
+
+  # Storage authorizes every request itself (user JWT + storage RLS, or the token in a signed
+  # URL), and <img> tags can't send an apikey header — so, as on hosted Supabase, no key check.
+  location /storage/v1/ {
+    proxy_pass http://storage:5000/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Prefix /storage/v1;
+  }
+
+  # Edge Functions authenticate per function (webhooks and the mock ID page carry no user token).
+  location /functions/v1/ {
+    proxy_pass http://functions:9000/;
+    proxy_set_header Host $host;
+    proxy_read_timeout 70s;
+  }
+
+  location / { return 404 '{"message":"no route"}'; }
+}

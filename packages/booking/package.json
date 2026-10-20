@@ -1,0 +1,16 @@
+{
+  "name": "@hmj/booking",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "test": "vitest run",
+    "gen:sql": "node --experimental-strip-types scripts/gen-sql.ts"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.0"
+  },
+  "type": "module"
+}
